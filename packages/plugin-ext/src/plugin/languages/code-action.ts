@@ -33,7 +33,7 @@ export class CodeActionAdapter {
     ) { }
 
     provideCodeAction(resource: URI, rangeOrSelection: Range | Selection,
-        context: monaco.languages.CodeActionContext, token: theia.CancellationToken): Promise<monaco.languages.CodeAction[]> {
+        context: monaco.languages.CodeActionContext, token: theia.CancellationToken): Promise<monaco.languages.CodeAction[] | undefined> {
         const document = this.document.getDocumentData(resource);
         if (!document) {
             return Promise.reject(new Error(`There are no document for ${resource}`));
@@ -58,7 +58,7 @@ export class CodeActionAdapter {
 
         return Promise.resolve(this.provider.provideCodeActions(doc, ran, codeActionContext, token)).then(commandsOrActions => {
             if (!Array.isArray(commandsOrActions) || commandsOrActions.length === 0) {
-                return undefined!;
+                return undefined;
             }
             const result: monaco.languages.CodeAction[] = [];
             for (const candidate of commandsOrActions) {

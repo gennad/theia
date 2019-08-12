@@ -44,7 +44,7 @@ import {
     Hover,
     DocumentHighlight,
     Range,
-    SingleEditOperation,
+    TextEdit,
     FormattingOptions,
     Definition,
     DefinitionLink,
@@ -55,6 +55,7 @@ import {
     Location,
     ColorPresentation,
     RenameLocation,
+    SignatureHelpContext,
 } from '../common/plugin-api-rpc-model';
 import { CompletionAdapter } from './languages/completion';
 import { Diagnostics } from './languages/diagnostics';
@@ -221,7 +222,7 @@ export class LanguagesExtImpl implements LanguagesExt {
     }
 
     $releaseCompletionItems(handle: number, id: number): void {
-        this.withAdapter(handle, CompletionAdapter, adapter => adapter.releaseCompletionItems(id));
+        this.withAdapter(handle, CompletionAdapter, async adapter => adapter.releaseCompletionItems(id));
     }
 
     registerCompletionItemProvider(selector: theia.DocumentSelector, provider: theia.CompletionItemProvider, triggerCharacters: string[]): theia.Disposable {
@@ -244,13 +245,19 @@ export class LanguagesExtImpl implements LanguagesExt {
     // ### Definition provider end
 
     // ### Signature help begin
-    $provideSignatureHelp(handle: number, resource: UriComponents, position: Position, token: theia.CancellationToken): Promise<SignatureHelp | undefined> {
-        return this.withAdapter(handle, SignatureHelpAdapter, adapter => adapter.provideSignatureHelp(URI.revive(resource), position, token));
+    $provideSignatureHelp(
+        handle: number, resource: UriComponents, position: Position, context: SignatureHelpContext, token: theia.CancellationToken
+    ): Promise<SignatureHelp | undefined> {
+        return this.withAdapter(handle, SignatureHelpAdapter, adapter => adapter.provideSignatureHelp(URI.revive(resource), position, token, context));
     }
 
-    registerSignatureHelpProvider(selector: theia.DocumentSelector, provider: theia.SignatureHelpProvider, ...triggerCharacters: string[]): theia.Disposable {
+    $releaseSignatureHelp(handle: number, id: number): void {
+        this.withAdapter(handle, SignatureHelpAdapter, async adapter => adapter.releaseSignatureHelp(id));
+    }
+
+    registerSignatureHelpProvider(selector: theia.DocumentSelector, provider: theia.SignatureHelpProvider, metadata: theia.SignatureHelpProviderMetadata): theia.Disposable {
         const callId = this.addNewAdapter(new SignatureHelpAdapter(provider, this.documents));
-        this.proxy.$registerSignatureHelpProvider(callId, this.transformDocumentSelector(selector), triggerCharacters);
+        this.proxy.$registerSignatureHelpProvider(callId, this.transformDocumentSelector(selector), metadata);
         return this.createDisposable(callId);
     }
     // ### Signature help end
@@ -337,7 +344,7 @@ export class LanguagesExtImpl implements LanguagesExt {
     }
 
     $provideDocumentFormattingEdits(handle: number, resource: UriComponents,
-        options: FormattingOptions, token: theia.CancellationToken): Promise<SingleEditOperation[] | undefined> {
+        options: FormattingOptions, token: theia.CancellationToken): Promise<TextEdit[] | undefined> {
         return this.withAdapter(handle, DocumentFormattingAdapter, adapter => adapter.provideDocumentFormattingEdits(URI.revive(resource), options, token));
     }
     // ### Document Formatting Edit end
@@ -350,7 +357,7 @@ export class LanguagesExtImpl implements LanguagesExt {
     }
 
     $provideDocumentRangeFormattingEdits(handle: number, resource: UriComponents, range: Range,
-        options: FormattingOptions, token: theia.CancellationToken): Promise<SingleEditOperation[] | undefined> {
+        options: FormattingOptions, token: theia.CancellationToken): Promise<TextEdit[] | undefined> {
         return this.withAdapter(handle, RangeFormattingAdapter, adapter => adapter.provideDocumentRangeFormattingEdits(URI.revive(resource), range, options, token));
     }
     // ### Document Range Formatting Edit end
@@ -367,7 +374,7 @@ export class LanguagesExtImpl implements LanguagesExt {
     }
 
     $provideOnTypeFormattingEdits(handle: number, resource: UriComponents, position: Position, ch: string,
-        options: FormattingOptions, token: theia.CancellationToken): Promise<SingleEditOperation[] | undefined> {
+        options: FormattingOptions, token: theia.CancellationToken): Promise<TextEdit[] | undefined> {
         return this.withAdapter(handle, OnTypeFormattingAdapter, adapter => adapter.provideOnTypeFormattingEdits(URI.revive(resource), position, ch, options, token));
     }
     // ### On Type Formatting Edit end
@@ -409,7 +416,7 @@ export class LanguagesExtImpl implements LanguagesExt {
         rangeOrSelection: Range | Selection,
         context: monaco.languages.CodeActionContext,
         token: theia.CancellationToken
-    ): Promise<monaco.languages.CodeAction[]> {
+    ): Promise<monaco.languages.CodeAction[] | undefined> {
         return this.withAdapter(handle, CodeActionAdapter, adapter => adapter.provideCodeAction(URI.revive(resource), rangeOrSelection, context, token));
     }
     // ### Code Actions Provider end

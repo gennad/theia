@@ -4113,11 +4113,11 @@ declare module '@theia/plugin' {
     }
 
     /**
-	 * A type that filesystem providers should use to signal errors.
-	 *
-	 * This class has factory methods for common error-cases, like `EntryNotFound` when
-	 * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.EntryNotFound(someUri);`
-	 */
+     * A type that filesystem providers should use to signal errors.
+     *
+     * This class has factory methods for common error-cases, like `EntryNotFound` when
+     * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.EntryNotFound(someUri);`
+     */
     export class FileSystemError extends Error {
 
         /**
@@ -4940,7 +4940,7 @@ declare module '@theia/plugin' {
          * The label of this signature. Will be shown in
          * the UI.
          */
-        label: string;
+        label: string | [number, number];
 
         /**
          * The human-readable doc-comment of this signature. Will be shown
@@ -5015,6 +5015,61 @@ declare module '@theia/plugin' {
     }
 
     /**
+     * How a [`SignatureHelpProvider`](#SignatureHelpProvider) was triggered.
+     */
+    export enum SignatureHelpTriggerKind {
+        /**
+         * Signature help was invoked manually by the user or by a command.
+         */
+        Invoke = 1,
+
+        /**
+         * Signature help was triggered by a trigger character.
+         */
+        TriggerCharacter = 2,
+
+        /**
+         * Signature help was triggered by the cursor moving or by the document content changing.
+         */
+        ContentChange = 3,
+    }
+
+    /**
+     * Additional information about the context in which a
+     * [`SignatureHelpProvider`](#SignatureHelpProvider.provideSignatureHelp) was triggered.
+     */
+    export interface SignatureHelpContext {
+        /**
+         * Action that caused signature help to be triggered.
+         */
+        readonly triggerKind: SignatureHelpTriggerKind;
+
+        /**
+         * Character that caused signature help to be triggered.
+         *
+         * This is `undefined` when signature help is not triggered by typing, such as when manually invoking
+         * signature help or when moving the cursor.
+         */
+        readonly triggerCharacter?: string;
+
+        /**
+         * `true` if signature help was already showing when it was triggered.
+         *
+         * Retriggers occur when the signature help is already active and can be caused by actions such as
+         * typing a trigger character, a cursor move, or document content changes.
+         */
+        readonly isRetrigger: boolean;
+
+        /**
+         * The currently active [`SignatureHelp`](#SignatureHelp).
+         *
+         * The `activeSignatureHelp` has its [`SignatureHelp.activeSignature`] field updated based on
+         * the user arrowing through available signatures.
+         */
+        readonly activeSignatureHelp?: SignatureHelp;
+    }
+
+    /**
      * The signature help provider interface defines the contract between extensions and
      * the [parameter hints](https://code.visualstudio.com/docs/editor/intellisense)-feature.
      */
@@ -5026,10 +5081,30 @@ declare module '@theia/plugin' {
          * @param document The document in which the command was invoked.
          * @param position The position at which the command was invoked.
          * @param token A cancellation token.
+         * @param context Information about how signature help was triggered.
+         *
          * @return Signature help or a thenable that resolves to such. The lack of a result can be
          * signaled by returning `undefined` or `null`.
          */
-        provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken | undefined): ProviderResult<SignatureHelp>;
+        provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, context: SignatureHelpContext): ProviderResult<SignatureHelp>;
+    }
+
+    /**
+     * Metadata about a registered [`SignatureHelpProvider`](#SignatureHelpProvider).
+     */
+    export interface SignatureHelpProviderMetadata {
+        /**
+         * List of characters that trigger signature help.
+         */
+        readonly triggerCharacters: ReadonlyArray<string>;
+
+        /**
+         * List of characters that re-trigger signature help.
+         *
+         * These trigger characters are only active when signature help is already showing. All trigger characters
+         * are also counted as re-trigger characters.
+         */
+        readonly retriggerCharacters: ReadonlyArray<string>;
     }
 
     /**
@@ -5648,6 +5723,13 @@ declare module '@theia/plugin' {
          * characters will be ignored.
          */
         commitCharacters?: string[];
+
+        /**
+         * Keep whitespace of the [insertText](#CompletionItem.insertText) as is. By default, the editor adjusts leading
+         * whitespace of new lines so that they match the indentation of the line for which the item is accepted - setting
+         * this to `true` will prevent that.
+         */
+        keepWhitespace?: boolean;
 
         /**
          * An optional array of additional [text edits](#TextEdit) that are applied when
@@ -6702,9 +6784,11 @@ declare module '@theia/plugin' {
          * @param selector A selector that defines the documents this provider is applicable to.
          * @param provider A signature help provider.
          * @param triggerCharacters Trigger signature help when the user types one of the characters, like `,` or `(`.
+         * @param metadata Information about the provider.
          * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
          */
         export function registerSignatureHelpProvider(selector: DocumentSelector, provider: SignatureHelpProvider, ...triggerCharacters: string[]): Disposable;
+        export function registerSignatureHelpProvider(selector: DocumentSelector, provider: SignatureHelpProvider, metadata: SignatureHelpProviderMetadata): Disposable;
 
         /**
          * Register a type definition provider.
@@ -7374,9 +7458,9 @@ declare module '@theia/plugin' {
         resolveDebugConfiguration?(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration>;
     }
 
-	/**
-	 * A Debug Adapter Tracker is a means to track the communication between VS Code and a Debug Adapter.
-	 */
+    /**
+     * A Debug Adapter Tracker is a means to track the communication between VS Code and a Debug Adapter.
+     */
     export interface DebugAdapterTracker {
         /**
          * A session with the debug adapter is about to be started.
@@ -7448,9 +7532,9 @@ declare module '@theia/plugin' {
         readonly options?: DebugAdapterExecutableOptions;
     }
 
-	/**
-	 * Options for a debug adapter executable.
-	 */
+    /**
+     * Options for a debug adapter executable.
+     */
     export interface DebugAdapterExecutableOptions {
 
         /**
@@ -8327,20 +8411,20 @@ declare module '@theia/plugin' {
         Expanded = 1
     }
 
-	/**
-	 * Comment mode of a [comment](#Comment)
-	 */
-	export enum CommentMode {
-		/**
-		 * Displays the comment editor
-		 */
-		Editing = 0,
+    /**
+     * Comment mode of a [comment](#Comment)
+     */
+    export enum CommentMode {
+        /**
+         * Displays the comment editor
+         */
+        Editing = 0,
 
-		/**
-		 * Displays the preview of the comment
-		 */
-		Preview = 1
-	}
+        /**
+         * Displays the preview of the comment
+         */
+        Preview = 1
+    }
 
     /**
      * A collection of [comments](#Comment) representing a conversation at a particular range in a document.
@@ -8531,81 +8615,81 @@ declare module '@theia/plugin' {
         dispose(): void;
     }
 
-	/**
-	 * Author information of a [comment](#Comment)
-	 */
-	export interface CommentAuthorInformation {
-		/**
-		 * The display name of the author of the comment
-		 */
-		name: string;
+    /**
+     * Author information of a [comment](#Comment)
+     */
+    export interface CommentAuthorInformation {
+        /**
+         * The display name of the author of the comment
+         */
+        name: string;
 
-		/**
-		 * The optional icon path for the author
-		 */
-		iconPath?: Uri;
-	}
+        /**
+         * The optional icon path for the author
+         */
+        iconPath?: Uri;
+    }
 
-	/**
-	 * Reactions of a [comment](#Comment)
-	 */
-	export interface CommentReaction {
-		/**
-		 * The human-readable label for the reaction
-		 */
-		readonly label: string;
+    /**
+     * Reactions of a [comment](#Comment)
+     */
+    export interface CommentReaction {
+        /**
+         * The human-readable label for the reaction
+         */
+        readonly label: string;
 
-		/**
-		 * Icon for the reaction shown in UI.
-		 */
-		readonly iconPath: string | Uri;
+        /**
+         * Icon for the reaction shown in UI.
+         */
+        readonly iconPath: string | Uri;
 
-		/**
-		 * The number of users who have reacted to this reaction
-		 */
-		readonly count: number;
+        /**
+         * The number of users who have reacted to this reaction
+         */
+        readonly count: number;
 
-		/**
-		 * Whether the [author](CommentAuthorInformation) of the comment has reacted to this reaction
-		 */
-		readonly authorHasReacted: boolean;
-	}
+        /**
+         * Whether the [author](CommentAuthorInformation) of the comment has reacted to this reaction
+         */
+        readonly authorHasReacted: boolean;
+    }
 
     /**
      * A comment is displayed within the editor or the Comments Panel, depending on how it is provided.
      */
     export interface Comment {
-		/**
-		 * The human-readable comment body
-		 */
+        /**
+         * The human-readable comment body
+         */
         body: string | MarkdownString;
 
-		/**
-		 * [Comment mode](#CommentMode) of the comment
-		 */
+        /**
+         * [Comment mode](#CommentMode) of the comment
+         */
         mode: CommentMode;
 
-		/**
-		 * The [author information](#CommentAuthorInformation) of the comment
-		 */
+        /**
+         * The [author information](#CommentAuthorInformation) of the comment
+         */
         author: CommentAuthorInformation;
 
-		/**
-		 * Context value of the comment. This can be used to contribute comment specific actions.
-		 * For example, a comment is given a context value as `editable`. When contributing actions to `comments/comment/title`
-		 * using `menus` extension point, you can specify context value for key `comment` in `when` expression like `comment == editable`.
-		 */
+        /**
+         * Context value of the comment. This can be used to contribute comment specific actions.
+         * For example, a comment is given a context value as `editable`. When contributing actions to `comments/comment/title`
+         * using `menus` extension point, you can specify context value for key `comment` in `when` expression like `comment == editable`.
+         */
         contextValue?: string;
 
-		/**
-		 * Optional reactions of the [comment](#Comment)
-		 */
+        /**
+         * Optional reactions of the [comment](#Comment)
+         */
         reactions?: CommentReaction[];
 
-		/**
-		 * Optional label describing the [Comment](#Comment)
-		 * Label will be rendered next to authorName if exists.
-		 */
+        /**
+         * Optional label describing the [Comment](#Comment)
+         * Label will be rendered next to authorName if exists.
+         */
         label?: string;
     }
 

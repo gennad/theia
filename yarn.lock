@@ -785,9 +785,10 @@
   dependencies:
     nan "2.10.0"
 
-"@typefox/monaco-editor-core@^0.14.6":
-  version "0.14.6"
-  resolved "https://registry.yarnpkg.com/@typefox/monaco-editor-core/-/monaco-editor-core-0.14.6.tgz#32e378f3430913504ea9c7063944444a04429892"
+"@typefox/monaco-editor-core@next":
+  version "0.18.0-next.1"
+  resolved "https://registry.yarnpkg.com/@typefox/monaco-editor-core/-/monaco-editor-core-0.18.0-next.1.tgz#c31d3361215703b524065f460e1b4b6b714699db"
+  integrity sha512-l7uZbyLfXwh5b5YHv1U2T5KQAVrPTnUqklRd1HEI6ZBWGqw5ukXa5L17ATaVYRpCsy7ZtqyOQS2viWSS/goNFA==
 
 "@types/base64-arraybuffer@0.1.0":
   version "0.1.0"
@@ -7343,18 +7344,20 @@ moment@^2.10.6, moment@^2.21.0, moment@^2.6.0:
   version "2.22.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.2.tgz#3c257f9839fc0e93ff53149632239eb90783ff66"
 
-monaco-css@^2.0.1:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/monaco-css/-/monaco-css-2.2.0.tgz#644e6e45d05f7704a4e1f563883bef4af9badb1f"
+monaco-css@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/monaco-css/-/monaco-css-2.5.0.tgz#eb173658306d6ae6a8d38c08df7f67ecba685f80"
+  integrity sha512-V5YuMysU5MbNMPlZxMfB4os/mx+nIH3emrl2zgQe7Iu77dQhODoUysd5OoZB9hzpFoRDZ/KFuEaFaib8/ziYRQ==
 
-monaco-html@^2.0.2:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/monaco-html/-/monaco-html-2.2.0.tgz#435f2f4ce6e5c7f707fb57e7c8a05b41e5cd1aa0"
+monaco-html@^2.5.2:
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/monaco-html/-/monaco-html-2.5.2.tgz#3e231ff50d024ed4f3c2d9fb075e77351f33508a"
+  integrity sha512-tugs+jHMtfInq/gMl5wXYoUs649rc5h6a/bbaK2+4MTx//iWUZ9mgTsgmbqqfbujEgHxxJHiGWTDIZjz8Ztx7g==
 
 monaco-languageclient@next:
-  version "0.9.0-next.1"
-  resolved "https://registry.yarnpkg.com/monaco-languageclient/-/monaco-languageclient-0.9.0-next.1.tgz#2a3c133f3b16c345aa3eba0738e7a0161cb2b05e"
-  integrity sha512-POZOxVsRBzqK14yfk66clEefTFR+Ahx77uhyhanmJG/pItBVX4E962N/uUwYZPGc4zO3FZ+Ef7tFFxbyIQXdAg==
+  version "0.9.1-next.23"
+  resolved "https://registry.yarnpkg.com/monaco-languageclient/-/monaco-languageclient-0.9.1-next.23.tgz#cb75de6c9b5ad5ab8661a635039226fd44b16850"
+  integrity sha512-al9kkHN8nJKu032s1Ac1+4dOgFMpejzh4VnIPem4Ct65S2/GmONK5sV4cSNj5YKQt71+Ja0PADIvoDYIo0UDtA==
   dependencies:
     glob-to-regexp "^0.3.0"
     vscode-jsonrpc "^4.1.0-next"

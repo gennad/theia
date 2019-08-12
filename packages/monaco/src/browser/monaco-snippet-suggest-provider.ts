@@ -19,22 +19,23 @@ import URI from '@theia/core/lib/common/uri';
 import { FileSystem, FileSystemError } from '@theia/filesystem/lib/common';
 
 @injectable()
-export class MonacoSnippetSuggestProvider implements monaco.modes.ISuggestSupport {
+export class MonacoSnippetSuggestProvider implements monaco.languages.CompletionItemProvider {
 
     @inject(FileSystem)
     protected readonly filesystem: FileSystem;
 
-    protected readonly snippets = new Map<string, MonacoSnippetSuggestion[]>();
+    protected readonly snippets = new Map<string, Snippet[]>();
     protected readonly pendingSnippets = new Map<string, Promise<void>[]>();
 
-    async provideCompletionItems(model: monaco.editor.ITextModel): Promise<monaco.modes.ISuggestResult> {
+    async provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position): Promise<monaco.languages.CompletionList> {
         const languageId = model.getModeId(); // TODO: look up a language id at the position
         await this.loadSnippets(languageId);
-        const suggestions = this.snippets.get(languageId) || [];
+        const range = monaco.Range.fromPositions(position);
+        const suggestions = (this.snippets.get(languageId) || []).map(snippet => new MonacoSnippetSuggestion(snippet, range));
         return { suggestions };
     }
 
-    resolveCompletionItem(_: monaco.editor.ITextModel, __: monaco.Position, item: monaco.modes.ISuggestion): monaco.modes.ISuggestion {
+    resolveCompletionItem(_: monaco.editor.ITextModel, __: monaco.Position, item: monaco.languages.CompletionItem): monaco.languages.CompletionItem {
         return item instanceof MonacoSnippetSuggestion ? item.resolve() : item;
     }
 
@@ -125,7 +126,7 @@ export class MonacoSnippetSuggestProvider implements monaco.modes.ISuggestSuppor
         for (const snippet of snippets) {
             for (const scope of snippet.scopes) {
                 const languageSnippets = this.snippets.get(scope) || [];
-                languageSnippets.push(new MonacoSnippetSuggestion(snippet));
+                languageSnippets.push(snippet);
                 this.snippets.set(scope, languageSnippets);
             }
         }
@@ -162,19 +163,22 @@ export interface Snippet {
     readonly source: string
 }
 
-export class MonacoSnippetSuggestion implements monaco.modes.ISuggestion {
+export class MonacoSnippetSuggestion implements monaco.languages.CompletionItem {
 
     readonly label: string;
     readonly detail: string;
     readonly sortText: string;
     readonly noAutoAccept = true;
-    readonly type: 'snippet' = 'snippet';
-    readonly snippetType: 'textmate' = 'textmate';
+    readonly kind = monaco.languages.CompletionItemKind.Snippet;
+    readonly insertTextRules = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
 
     insertText: string;
     documentation?: monaco.IMarkdownString;
 
-    constructor(protected readonly snippet: Snippet) {
+    constructor(
+        protected readonly snippet: Snippet,
+        readonly range: monaco.Range
+    ) {
         this.label = snippet.prefix;
         this.detail = `${snippet.description || snippet.name} (${snippet.source})`;
         this.insertText = snippet.body;
