@@ -12,6 +12,7 @@
     }
   },
   "dependencies": {
+    "@theia/api-tests": "^0.9.0",
     "@theia/callhierarchy": "^0.9.0",
     "@theia/console": "^0.9.0",
     "@theia/core": "^0.9.0",

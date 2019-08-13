@@ -4,6 +4,9 @@
     "skipLibCheck": false,
     "baseUrl": ".",
     "paths": {
+      "@theia/api-tests/lib/*": [
+        "packages/api-tests/src/*"
+      ],
       "@theia/application-package": [
         "dev-packages/application-package/src"
       ],
