@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "type": "gdb",
+          "name": "Debug c++ application",
+          "request": "launch",
+          "program": "${workspaceFolder}/a.out",
+      },
+      {
+          "type": "java",
+          "name": "Debug (Launch) - Current File",
+          "request": "launch",
+          "mainClass": "${file}"
+      }
+  ]
+}
