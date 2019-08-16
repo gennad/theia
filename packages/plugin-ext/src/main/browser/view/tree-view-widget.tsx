@@ -141,7 +141,7 @@ export class PluginTree extends TreeImpl {
             }, update);
         }
         if (TreeViewNode.is(node)) {
-            return Object.assign(node, update);
+            return Object.assign(node, update, { command: item.command });
         }
         return Object.assign({
             id: item.id,
