@@ -841,6 +841,12 @@ export interface Git extends Disposable {
     // tslint:disable-next-line:no-any
     lsFiles(repository: Repository, uri: string, options?: Git.Options.LsFiles): Promise<any>;
 
+    /**
+     * Initialises a new git repository in the folder with the given uri.
+     *
+     * @param uri the uri of the folder
+     */
+    initRepository(uri: string): Promise<string>;
 }
 
 /**

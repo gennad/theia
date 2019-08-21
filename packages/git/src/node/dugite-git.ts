@@ -724,6 +724,12 @@ export class DugiteGit implements Git {
         return blame;
     }
 
+    async initRepository(uri: string): Promise<string> {
+        await this.ready.promise;
+        const result = await git(['init'], FileUri.fsPath(uri), 'init');
+        return result.stdout;
+    }
+
     // tslint:disable-next-line:no-any
     async lsFiles(repository: Repository, uri: string, options?: Git.Options.LsFiles): Promise<any> {
         await this.ready.promise;
