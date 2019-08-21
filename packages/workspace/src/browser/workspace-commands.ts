@@ -447,15 +447,29 @@ export class WorkspaceRootUriAwareCommandHandler extends UriAwareCommandHandler<
         super(selectionService, handler);
     }
 
+    isVisible(): boolean {
+        return !!this.workspaceService.tryGetRoots().length;
+    }
+
+    isEnabled(): boolean {
+        return !!this.workspaceService.tryGetRoots().length;
+    }
+
     protected getUri(): URI | undefined {
         const uri = super.getUri();
-        if (this.workspaceService.isMultiRootWorkspaceEnabled) {
-            return uri;
-        }
+        // If the URI is available, return it immediately.
         if (uri) {
             return uri;
         }
-        const root = this.workspaceService.tryGetRoots()[0];
+        // If a multi-root workspace is currently opened with at least one root,
+        // return the URI of the first available root.
+        if (this.workspaceService.isMultiRootWorkspaceOpened &&
+            !!this.workspaceService.tryGetRoots().length) {
+            const firstRoot = this.workspaceService.tryGetRoots()[0];
+            return new URI(firstRoot.uri);
+        }
+        // Return the workspace root URI if available.
+        const root = this.workspaceService.workspace;
         return root && new URI(root.uri);
     }
 
