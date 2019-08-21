@@ -78,4 +78,17 @@ export class TaskDefinitionRegistry {
         this.definitions.set(taskType, [...this.getDefinitions(taskType), definition]);
         this.onDidRegisterTaskDefinitionEmitter.fire(undefined);
     }
+
+    compareTasks(one: TaskConfiguration, other: TaskConfiguration): boolean {
+        const oneType = one.taskType || one.type;
+        const otherType = other.taskType || other.type;
+        if (oneType !== otherType) {
+            return false;
+        }
+        const def = this.getDefinition(one);
+        if (def) {
+            return def.properties.all.every(p => p === 'type' || one[p] === other[p]) && one._scope === other._scope;
+        }
+        return one.label === other.label && one._source === other._source;
+    }
 }

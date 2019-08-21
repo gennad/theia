@@ -329,9 +329,16 @@ export class TaskConfigurations implements Disposable {
                     if (this.rawTaskConfigurations.has(rootFolderUri)) {
                         this.rawTaskConfigurations.delete(rootFolderUri);
                     }
-                    const tasks = rawTasks['tasks'].map((t: TaskCustomization | TaskConfiguration) =>
-                        Object.assign(t, { _source: t.source || this.getSourceFolderFromConfigUri(uri) })
-                    );
+                    const tasks = rawTasks['tasks'].map((t: TaskCustomization | TaskConfiguration) => {
+                        if (this.isDetectedTask(t)) {
+                            const def = this.getTaskDefinition(t);
+                            return Object.assign(t, {
+                                _source: def!.source,
+                                _scope: this.getSourceFolderFromConfigUri(uri)
+                            });
+                        }
+                        return Object.assign(t, { _source: this.getSourceFolderFromConfigUri(uri) });
+                    });
                     this.rawTaskConfigurations.set(rootFolderUri, tasks);
                     return tasks;
                 }
@@ -362,7 +369,7 @@ export class TaskConfigurations implements Disposable {
 
         const configFileUri = this.getConfigFileUri(sourceFolderUri);
         const configuredAndCustomizedTasks = await this.getTasks();
-        if (!configuredAndCustomizedTasks.some(t => ContributedTaskConfiguration.equals(t, task))) {
+        if (!configuredAndCustomizedTasks.some(t => this.taskDefinitionRegistry.compareTasks(t, task))) {
             await this.saveTask(configFileUri, task);
         }
 
